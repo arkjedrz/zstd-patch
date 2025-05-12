@@ -42,6 +42,12 @@ typedef enum {
     ZP_ERR_NULL_PTR,
     /// @brief Non-null out parameter provided.
     ZP_ERR_NONNULL_OUT_PARAM,
+    /// @brief Unknown size of patched content.
+    ZP_ERR_OUTPUT_SIZE_UNKNOWN,
+    /// @brief Failed to get patched content size.
+    ZP_ERR_OUTPUT_SIZE_ERROR,
+    /// @brief Patched content is too large.
+    ZP_ERR_OUTPUT_TOO_LARGE,
     /// @brief Other error encountered.
     ZP_ERR_OTHER
 } ZP_ERR;

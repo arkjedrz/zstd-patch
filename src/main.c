@@ -169,21 +169,14 @@ static ZP_ERR run_patch_apply(const Config* cfg) {
     res = load_file_to_buf(cfg->patch_path, &patch_buf, &patch_buf_size);
     CHECK_ERR(res);
 
-    // Allocate output buffer.
-    // TODO: can this be guessed?
-    const size_t kToBufferSize = 2 * 1024 * 1024;
-    void* to_buf = NULL;
-    res = alloc_buf(kToBufferSize, &to_buf);
-    CHECK_ERR(res);
-
     // Apply patch.
-    size_t to_size = 0;
-    res = patch_apply(from_buf, from_buf_size, patch_buf, patch_buf_size, to_buf, kToBufferSize,
-                      &to_size);
+    size_t to_buf_size = 0;
+    void* to_buf = NULL;
+    res = patch_apply(from_buf, from_buf_size, patch_buf, patch_buf_size, &to_buf, &to_buf_size);
     CHECK_ERR(res);
 
     // Save output.
-    res = save_file_from_buf(cfg->to_path, to_buf, to_size);
+    res = save_file_from_buf(cfg->to_path, to_buf, to_buf_size);
     CHECK_ERR(res);
 
     return ZP_ERR_OK;
