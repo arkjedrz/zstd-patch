@@ -147,6 +147,41 @@ static ZP_ERR save_file_from_buf(const char* file_path, void* buf, const size_t 
     return ZP_ERR_OK;
 }
 
+/// @brief Create patch based on config.
+/// @param cfg [in] App config.
+/// @return    Error code.
+static ZP_ERR run_patch_create(const Config* cfg) {
+    CHECK_NULL(cfg);
+
+    // Check paths.
+    CHECK_FILE_NOT_FOUND(cfg->from_path);
+    CHECK_FILE_NOT_FOUND(cfg->to_path);
+    CHECK_FILE_EXISTS(cfg->patch_path);
+
+    // Load file contents.
+    size_t from_buf_size = 0;
+    void* from_buf = NULL;
+    ZP_ERR res = load_file_to_buf(cfg->from_path, &from_buf, &from_buf_size);
+    CHECK_ERR(res);
+
+    size_t to_buf_size = 0;
+    void* to_buf = NULL;
+    res = load_file_to_buf(cfg->to_path, &to_buf, &to_buf_size);
+    CHECK_ERR(res);
+
+    // Create patch.
+    size_t patch_buf_size = 0;
+    void* patch_buf = NULL;
+    res = patch_create(from_buf, from_buf_size, to_buf, to_buf_size, &patch_buf, &patch_buf_size);
+    CHECK_ERR(res);
+
+    // Save output.
+    res = save_file_from_buf(cfg->patch_path, patch_buf, patch_buf_size);
+    CHECK_ERR(res);
+
+    return ZP_ERR_OK;
+}
+
 /// @brief Apply patch based on config.
 /// @param cfg [in] App config.
 /// @return    Error code.
@@ -194,7 +229,7 @@ int main(int argc, char** argv) {
     // Run selected mode.
     switch (cfg.mode) {
         case ZP_MODE_CREATE:
-            res = ZP_ERR_NOT_IMPLEMENTED;
+            res = run_patch_create(&cfg);
             break;
         case ZP_MODE_APPLY:
             res = run_patch_apply(&cfg);

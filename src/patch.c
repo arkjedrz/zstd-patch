@@ -5,11 +5,47 @@
 #include <sys/stat.h>
 #include <zstd.h>
 
-ZP_ERR patch_create(UNUSED const void* from_buf, UNUSED const size_t from_buf_size,
-                    UNUSED const void* to_buf, UNUSED const size_t to_buf_size,
-                    UNUSED void** patch_buf, UNUSED size_t* patch_buf_size) {
-    // TODO: recreate patch creation.
-    return ZP_ERR_NOT_IMPLEMENTED;
+ZP_ERR patch_create(const void* from_buf, const size_t from_buf_size, const void* to_buf,
+                    const size_t to_buf_size, void** patch_buf, size_t* patch_buf_size) {
+    CHECK_NULL(from_buf);
+    CHECK_NULL(patch_buf);
+    CHECK_NULL(to_buf);
+    CHECK_NONNULL_OUT(*patch_buf);
+    CHECK_NULL(patch_buf_size);
+
+    // Create compression context.
+    ZSTD_CCtx* cctx = ZSTD_createCCtx();
+
+    // Determine maximum patch size.
+    size_t max_patch_size = ZSTD_compressBound(from_buf_size);
+    if (ZSTD_isError(max_patch_size) != 0) {
+        msg_err("%s", ZSTD_getErrorString(max_patch_size));
+        return ZP_ERR_OUTPUT_SIZE_ERROR;
+    }
+
+    // Allocate patch buffer.
+    void* new_buf = malloc(max_patch_size);
+
+    // Run compression.
+    size_t patch_size = ZSTD_compress_usingDict(cctx, new_buf, max_patch_size, to_buf, to_buf_size,
+                                                from_buf, from_buf_size, ZSTD_btultra2);
+    if (ZSTD_isError(patch_size) != 0) {
+        msg_err("%s", ZSTD_getErrorString(patch_size));
+        return ZP_ERR_OTHER;
+    }
+    if (patch_size > max_patch_size) {
+        msg_err("Output (%ld) is larger than capacity (%ld)", patch_size, max_patch_size);
+        return ZP_ERR_OUTPUT_TOO_LARGE;
+    }
+
+    // Clean-up.
+    ZSTD_freeCCtx(cctx);
+
+    // Set output parameters.
+    *patch_buf = new_buf;
+    *patch_buf_size = patch_size;
+
+    return ZP_ERR_OK;
 }
 
 ZP_ERR patch_apply(const void* from_buf, const size_t from_size, const void* patch_buf,

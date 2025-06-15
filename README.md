@@ -41,8 +41,21 @@ zstd -d --patch-from <PATH TO OLD VERSION> <PATH TO PATCH> -o <PATH TO NEW VERSI
 
 ### Create patch mode
 
-To generate patch file use:
+To create patch use:
+
+```bash
+./zstd-patch create <PATH TO OLD VERSION> <PATH TO PATCH> <PATH TO NEW VERSION>
+```
+
+This should behave like:
 
 ```bash
 zstd --patch-from <PATH TO OLD VERSION> <PATH TO NEW VERSION> -o <PATH TO PATCH>
+```
+
+### Example
+
+```bash
+./zstd-patch create old-file out.zst new-file
+./zstd-patch apply old-file out.zst patched-file
 ```
